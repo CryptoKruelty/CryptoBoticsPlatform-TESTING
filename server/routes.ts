@@ -175,10 +175,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Use SERVER_HOST and include port 5000 (development server port)
-      const host = process.env.SERVER_HOST || 'localhost';
-      const port = process.env.NODE_ENV === 'production' ? '' : ':5000';
-      const returnUrl = `http://${host}${port}/dashboard`;
+      // In development, always use localhost:5000
+      const returnUrl = process.env.NODE_ENV === 'production'
+        ? `https://${process.env.SERVER_HOST || 'localhost'}/dashboard`
+        : 'http://localhost:5000/dashboard';
       
       const portalSession = await stripeService.createBillingPortalSession(
         user.stripeCustomerId,

@@ -15,11 +15,13 @@ export interface AuthStatus {
 }
 
 export const loginWithDiscord = () => {
-  // Use the full URL with protocol when in production
+  const state = crypto.randomUUID();
+  sessionStorage.setItem('discord_oauth_state', state);
+  
   const baseUrl = process.env.NODE_ENV === 'production' 
     ? window.location.origin
     : 'http://localhost:5000';
-  window.location.href = `${baseUrl}/auth/discord`;
+  window.location.href = `${baseUrl}/auth/discord?state=${state}`;
 };
 
 export const logout = async () => {

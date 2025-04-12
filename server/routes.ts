@@ -33,7 +33,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup Discord OAuth routes
   app.get("/auth/discord", (req, res) => {
-    const state = crypto.randomBytes(16).toString("hex");
+    const state = req.query.state as string;
+    if (!state) {
+      return res.status(400).json({ message: "Missing state parameter" });
+    }
     req.session.oauthState = state;
     
     const redirectUri = process.env.SERVER_HOST

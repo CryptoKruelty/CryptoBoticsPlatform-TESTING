@@ -5,6 +5,8 @@ import {
   type StripeEvent, type InsertStripeEvent,
   type PlatformStats
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -31,170 +33,224 @@ export interface IStorage {
   updatePlatformStats(updates: Partial<PlatformStats>): Promise<PlatformStats>;
 }
 
-export class MemStorage implements IStorage {
-  private userStore: Map<number, User>;
-  private botStore: Map<number, Bot>;
-  private stripeEventStore: Map<number, StripeEvent>;
-  private platformStatsStore: PlatformStats;
-  private currentUserId: number;
-  private currentBotId: number;
-  private currentStripeEventId: number;
-
-  constructor() {
-    this.userStore = new Map();
-    this.botStore = new Map();
-    this.stripeEventStore = new Map();
-    this.platformStatsStore = {
-      id: 1,
-      totalUsers: 0,
-      activeBots: 0,
-      totalRpcCalls: 0,
-      dailyRpcCalls: 0,
-      revenue: 0,
-      updatedAt: new Date()
-    };
-    this.currentUserId = 1;
-    this.currentBotId = 1;
-    this.currentStripeEventId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.userStore.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByDiscordId(discordId: string): Promise<User | undefined> {
-    return Array.from(this.userStore.values()).find(
-      (user) => user.discordId === discordId
-    );
+    const [user] = await db.select().from(users).where(eq(users.discordId, discordId));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const now = new Date();
-    const user: User = { ...insertUser, id, createdAt: now };
-    this.userStore.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     
     // Update platform stats
-    this.platformStatsStore.totalUsers += 1;
-    this.platformStatsStore.updatedAt = now;
+    const [stats] = await db.select().from(platformStats).limit(1);
+    if (stats) {
+      await db.update(platformStats)
+        .set({ 
+          totalUsers: stats.totalUsers + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(platformStats.id, stats.id));
+    } else {
+      await db.insert(platformStats).values({
+        totalUsers: 1,
+        activeBots: 0,
+        totalRpcCalls: 0,
+        dailyRpcCalls: 0,
+        revenue: 0
+      });
+    }
     
     return user;
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
-    const user = this.userStore.get(id);
-    if (!user) return undefined;
+    const [updatedUser] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
     
-    const updatedUser = { ...user, ...updates };
-    this.userStore.set(id, updatedUser);
     return updatedUser;
   }
 
   async updateUserStripeInfo(id: number, stripeInfo: { stripeCustomerId: string, subscriptionStatus?: string }): Promise<User | undefined> {
-    const user = this.userStore.get(id);
-    if (!user) return undefined;
-    
-    const updatedUser = { 
-      ...user, 
-      stripeCustomerId: stripeInfo.stripeCustomerId,
-      subscriptionStatus: stripeInfo.subscriptionStatus as any || user.subscriptionStatus
+    const updates: Partial<User> = {
+      stripeCustomerId: stripeInfo.stripeCustomerId
     };
-    this.userStore.set(id, updatedUser);
+    
+    if (stripeInfo.subscriptionStatus) {
+      updates.subscriptionStatus = stripeInfo.subscriptionStatus as any;
+    }
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    
     return updatedUser;
   }
 
   // Bot operations
   async getBotsByUserId(userId: number): Promise<Bot[]> {
-    return Array.from(this.botStore.values()).filter(
-      (bot) => bot.userId === userId
-    );
+    return db.select().from(bots).where(eq(bots.userId, userId));
   }
 
   async getBot(id: number): Promise<Bot | undefined> {
-    return this.botStore.get(id);
+    const [bot] = await db.select().from(bots).where(eq(bots.id, id));
+    return bot;
   }
 
   async createBot(insertBot: InsertBot): Promise<Bot> {
-    const id = this.currentBotId++;
-    const now = new Date();
-    const bot: Bot = { 
-      ...insertBot, 
-      id, 
-      status: 'configured', 
-      lastUpdated: null,
-      lastValue: null,
-      createdAt: now 
-    };
-    this.botStore.set(id, bot);
+    const [bot] = await db.insert(bots).values(insertBot).returning();
     return bot;
   }
 
   async updateBot(id: number, updates: Partial<Bot>): Promise<Bot | undefined> {
-    const bot = this.botStore.get(id);
-    if (!bot) return undefined;
-    
-    const updatedBot = { ...bot, ...updates };
-    this.botStore.set(id, updatedBot);
-    
-    // Update platform stats if status changed to/from active
-    if (updates.status === 'active' && bot.status !== 'active') {
-      this.platformStatsStore.activeBots += 1;
-    } else if (bot.status === 'active' && updates.status && updates.status !== 'active') {
-      this.platformStatsStore.activeBots = Math.max(0, this.platformStatsStore.activeBots - 1);
+    // First, check if status is changing to/from active
+    if (updates.status) {
+      const [currentBot] = await db.select().from(bots).where(eq(bots.id, id));
+      
+      if (currentBot) {
+        const activatingBot = updates.status === 'active' && currentBot.status !== 'active';
+        const deactivatingBot = currentBot.status === 'active' && updates.status !== 'active';
+        
+        // Update platform stats if necessary
+        if (activatingBot || deactivatingBot) {
+          const [stats] = await db.select().from(platformStats).limit(1);
+          
+          if (stats) {
+            if (activatingBot) {
+              await db.update(platformStats)
+                .set({ 
+                  activeBots: stats.activeBots + 1,
+                  updatedAt: new Date()
+                })
+                .where(eq(platformStats.id, stats.id));
+            } else if (deactivatingBot) {
+              await db.update(platformStats)
+                .set({ 
+                  activeBots: Math.max(0, stats.activeBots - 1),
+                  updatedAt: new Date()
+                })
+                .where(eq(platformStats.id, stats.id));
+            }
+          }
+        }
+      }
     }
+    
+    // Update the bot
+    const [updatedBot] = await db
+      .update(bots)
+      .set(updates)
+      .where(eq(bots.id, id))
+      .returning();
     
     return updatedBot;
   }
 
   async deleteBot(id: number): Promise<boolean> {
-    const bot = this.botStore.get(id);
-    if (!bot) return false;
+    // Check if bot is active before deleting
+    const [bot] = await db.select().from(bots).where(eq(bots.id, id));
     
-    // Update platform stats if the bot was active
-    if (bot.status === 'active') {
-      this.platformStatsStore.activeBots = Math.max(0, this.platformStatsStore.activeBots - 1);
+    if (bot) {
+      if (bot.status === 'active') {
+        // Update active bots count in platform stats
+        const [stats] = await db.select().from(platformStats).limit(1);
+        if (stats) {
+          await db.update(platformStats)
+            .set({ 
+              activeBots: Math.max(0, stats.activeBots - 1),
+              updatedAt: new Date()
+            })
+            .where(eq(platformStats.id, stats.id));
+        }
+      }
+      
+      // Delete the bot
+      await db.delete(bots).where(eq(bots.id, id));
+      return true;
     }
     
-    return this.botStore.delete(id);
+    return false;
   }
 
   // Stripe operations
   async createStripeEvent(insertEvent: InsertStripeEvent): Promise<StripeEvent> {
-    const id = this.currentStripeEventId++;
-    const now = new Date();
-    const event: StripeEvent = { ...insertEvent, id, processed: false, createdAt: now };
-    this.stripeEventStore.set(id, event);
+    const [event] = await db.insert(stripeEvents).values(insertEvent).returning();
     return event;
   }
 
   async getUnprocessedStripeEvents(): Promise<StripeEvent[]> {
-    return Array.from(this.stripeEventStore.values()).filter(
-      (event) => !event.processed
-    );
+    return db.select().from(stripeEvents).where(eq(stripeEvents.processed, false));
   }
 
   async markStripeEventProcessed(id: number): Promise<boolean> {
-    const event = this.stripeEventStore.get(id);
-    if (!event) return false;
+    const result = await db
+      .update(stripeEvents)
+      .set({ processed: true })
+      .where(eq(stripeEvents.id, id));
     
-    this.stripeEventStore.set(id, { ...event, processed: true });
-    return true;
+    return result.rowCount > 0;
   }
 
   // Platform stats operations
   async getPlatformStats(): Promise<PlatformStats> {
-    return this.platformStatsStore;
+    const [stats] = await db.select().from(platformStats).limit(1);
+    
+    if (!stats) {
+      // Create initial stats record if none exists
+      const [newStats] = await db.insert(platformStats).values({
+        totalUsers: 0,
+        activeBots: 0,
+        totalRpcCalls: 0,
+        dailyRpcCalls: 0,
+        revenue: 0
+      }).returning();
+      
+      return newStats;
+    }
+    
+    return stats;
   }
 
   async updatePlatformStats(updates: Partial<PlatformStats>): Promise<PlatformStats> {
-    this.platformStatsStore = { 
-      ...this.platformStatsStore, 
-      ...updates,
-      updatedAt: new Date()
-    };
-    return this.platformStatsStore;
+    const [stats] = await db.select().from(platformStats).limit(1);
+    
+    if (!stats) {
+      // Create initial stats with updates
+      const [newStats] = await db.insert(platformStats).values({
+        totalUsers: updates.totalUsers || 0,
+        activeBots: updates.activeBots || 0,
+        totalRpcCalls: updates.totalRpcCalls || 0,
+        dailyRpcCalls: updates.dailyRpcCalls || 0,
+        revenue: updates.revenue || 0
+      }).returning();
+      
+      return newStats;
+    }
+    
+    // Update existing stats
+    const [updatedStats] = await db
+      .update(platformStats)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(platformStats.id, stats.id))
+      .returning();
+    
+    return updatedStats;
   }
 }
 
-export const storage = new MemStorage();
+// Export storage instance
+export const storage = new DatabaseStorage();

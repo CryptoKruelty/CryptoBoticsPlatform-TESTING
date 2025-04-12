@@ -1,0 +1,460 @@
+# CryptoBotics - Technical Specification
+
+## System Overview
+
+CryptoBotics is a SaaS platform that allows users to create and manage Discord bots that display real-time DeFi metrics for various blockchain networks. The platform leverages Discord OAuth for authentication, implements Stripe for subscription management, and uses JSON-RPC calls to retrieve on-chain data that Discord bots display in real-time.
+
+## Architecture
+
+### System Components
+
+1. **Backend Server (Node.js/Express)**
+   - API endpoints
+   - Authentication services
+   - Bot management
+   - Subscription management
+   - Database operations
+
+2. **Frontend Client (React)**
+   - User interface for authentication
+   - Dashboard for bot management
+   - Subscription management interface
+   - Admin dashboard
+
+3. **Discord Bot Service**
+   - Persistent connection to Discord API
+   - Real-time updates of on-chain data
+   - Display of metrics in Discord servers
+
+4. **External Services**
+   - Stripe API for payment processing
+   - Discord OAuth for authentication
+   - Blockchain RPC endpoints for data retrieval
+
+### Database Schema
+
+#### User Model
+- Discord ID (unique identifier)
+- Username and avatar from Discord
+- Email
+- Stripe Customer ID
+- Subscription status
+- Token information (access, refresh, expiration)
+- Admin status
+- Bot and cost metrics
+
+#### Bot Model
+- Owner reference (User)
+- Bot type (standard, alert_whale, alert_buy, custom_rpc)
+- Encrypted bot token
+- Discord guild and channel IDs
+- Configuration parameters (network, addresses, functions, formatting)
+- Update frequency and cost information
+- Stripe subscription item ID
+- Display settings and state tracking
+
+#### Additional Models
+- StripeEvent: Store and track Stripe webhook events
+- PlatformStats: Track platform-wide metrics
+
+## Core Functionality
+
+### 1. Authentication Service
+
+#### Discord OAuth Flow
+1. **Initiation**
+   - User clicks "Login with Discord" button
+   - Frontend redirects to `/auth/discord` endpoint
+   - Express routes to Discord authentication URL
+
+2. **Authorization**
+   - Discord prompts user for permission
+   - User grants access to identity, email, and guilds
+   - Discord redirects back to callback URL with authorization code
+
+3. **Token Exchange**
+   - Backend exchanges code for Discord access/refresh tokens
+   - Backend creates/updates user in database
+   - JWT and refresh tokens are generated
+   - Tokens stored in HTTP-only cookies
+
+4. **Session Management**
+   - JWT authentication for API requests
+   - Refresh token mechanism for token renewal
+   - Remember-me functionality for extended sessions
+   - Secure, HTTP-only cookies with appropriate expiration
+
+5. **Authorization Middleware**
+   - ensureAuthenticated: Verify session or JWT
+   - ensureAdmin: Check admin privileges
+   - ensureGuildAdmin: Verify Discord server admin status
+
+### 2. Bot Management Service
+
+#### Bot Creation Process
+1. User selects bot type and configuration parameters
+2. System validates parameters and Discord permissions
+3. New Discord bot is registered in user's server
+4. Subscription is created/updated in Stripe
+5. Bot is deployed and starts running
+
+#### Bot Types and Functionality
+1. **Standard Bot**
+   - Displays metrics like price, total supply, or wallet balance
+   - Updates at configurable intervals (60/30/15 seconds)
+   - Changes nickname to display current value
+   - Sets presence to "Watching [Metric]"
+
+2. **Alert Bots (Whale/Buy)**
+   - Monitors transactions for threshold events
+   - Sends notifications to specified Discord channel
+   - Can use custom message templates
+   - Configurable thresholds
+
+3. **Custom RPC Bot**
+   - Execute custom smart contract calls
+   - Format and display results
+   - Support for complex data extraction
+   - Custom update frequencies
+
+#### Persistent Bot Service
+1. **Initialization**
+   - On server start, load all active bots
+   - Establish Discord client connections
+   - Set up recurring update intervals
+
+2. **Update Process**
+   - Retrieve data via JSON-RPC calls to blockchain
+   - Format value according to bot configuration
+   - Update Discord bot nickname and presence
+   - Record last value and timestamp in database
+
+3. **Error Handling**
+   - Reconnection logic for Discord API issues
+   - Error logging and status updates
+   - Failed update tracking
+
+4. **Management Operations**
+   - Start/stop/restart individual bots
+   - Bulk operations for all bots
+   - Status monitoring and metrics
+
+### 3. Stripe Integration
+
+#### Subscription Management
+1. **Customer Creation**
+   - Create Stripe customer upon first subscription
+   - Link Discord user to Stripe customer ID
+   - Store customer ID in user model
+
+2. **Subscription Pricing**
+   - Per-bot pricing model (no traditional SaaS plans)
+   - Base price determined by bot type:
+     - Standard Bot: $5.00/month
+     - Alert Bots (Buy/Whale): $8.00/month
+     - Custom RPC Bot: $11.00/month
+   - All bots default to 60-second updates
+   - Update frequency add-ons:
+     - 30 seconds: +$2.00/month
+     - 15 seconds: +$5.00/month
+   - Users are charged based on the total number of active bots
+   - Dynamic price creation in Stripe
+
+3. **Subscription Items**
+   - Each bot is a separate subscription item
+   - Subscription items linked to bots via metadata and database
+   - Allows individual management of bot subscriptions
+
+4. **Payment Processing**
+   - Checkout sessions for initial payment
+   - Customer portal for subscription management
+   - Webhook handling for payment events
+
+#### Webhook Handling
+1. **Event Processing**
+   - Store all Stripe events in database
+   - Process relevant events (payments, failures, cancellations)
+   - Update bot and user status based on payment events
+
+2. **Payment Success Flow**
+   - Update user subscription status
+   - Activate/reactivate paused bots
+   - Start bot instances if needed
+
+3. **Payment Failure Flow**
+   - Flag potential issues with subscription
+   - Notification system for failures
+   - Grace period handling
+
+4. **Subscription Cancellation**
+   - Mark user's subscription as inactive
+   - Pause associated bots
+   - Update database records
+
+### 4. RPC Communication
+
+#### Blockchain Data Retrieval
+1. **Network Configuration**
+   - Support for multiple blockchains (ETH, BSC, Polygon, etc.)
+   - Configurable RPC endpoints per network
+   - Fallback mechanisms for RPC failures
+
+2. **Smart Contract Interaction**
+   - General-purpose eth_call implementation
+   - Support for contract function signatures and arguments
+   - Result decoding based on ABI definitions
+   - Custom data extraction via JSON paths
+
+3. **Common DeFi Metrics**
+   - Price calculation from DEX pairs
+   - Token balance retrieval
+   - Supply information
+   - Custom contract metrics
+
+4. **Data Formatting**
+   - Decimal handling for token amounts
+   - Appropriate formatting for different value ranges
+   - Custom formatting options
+
+## Security Considerations
+
+### Data Protection
+1. **Token Encryption**
+   - Discord bot tokens encrypted at rest
+   - Secure cryptographic methods for encryption/decryption
+   - Environment variable-based encryption keys
+
+2. **Authentication Security**
+   - HTTP-only cookies for tokens
+   - Secure cookie settings in production
+   - CORS configuration based on environment
+   - JWT with appropriate expiration
+
+3. **API Security**
+   - Helmet for HTTP security headers
+   - CSRF protection
+   - Rate limiting for sensitive endpoints
+   - Input validation and sanitization
+
+### Access Control
+1. **User Permissions**
+   - Role-based access control (admin vs. regular users)
+   - Discord server admin verification for bot creation
+   - Ownership validation for bot operations
+
+2. **Admin Functionality**
+   - Protected admin routes
+   - Administrative operations for bot management
+   - User management capabilities
+   - Analytics and reporting
+
+## Frontend Architecture
+
+### Key Pages
+1. **Home/Landing Page**
+   - Marketing content with visually engaging bot icons
+     - Fire icon for burn wallet tracking bots
+     - Chart/graph icon for price tracking bots
+     - Whale icon for large transaction alert bots
+     - Lightning icon for custom RPC bots
+     - Thematic icons for each bot type to improve UI/UX
+   - Service description with visual examples
+   - Bot type showcase with icon representations
+   - Call-to-action for login/signup
+
+2. **Authentication Pages**
+   - Login via Discord
+   - Remember-me option
+   - Redirect handling
+
+3. **Dashboard**
+   - Overview of user's bots with detailed cards
+     - Bot type and status indicators
+     - Monitored metric and current value
+     - Individual monthly cost display on each card
+     - Visual update frequency indicator
+   - Subscription status with monthly total cost summary
+   - Quick actions for bot management
+   - Cost breakdown by bot type and update frequency
+
+4. **Bot Management Pages**
+   - Bot creation wizard
+   - Bot configuration interface
+   - Monitoring and logs
+   - Payment integration
+
+5. **Subscription Management**
+   - Current subscription information
+   - Payment method management (via Stripe portal)
+   - Upgrade/downgrade options
+
+6. **Admin Dashboard**
+   - Platform statistics
+   - User management
+   - Bot oversight
+   - System configuration
+
+### React Components
+- Navbar for navigation and user status
+- Bot cards for displaying bot information
+- Configuration forms for bot setup
+- Modal components for actions and confirmations
+- Loading and error states
+
+## API Endpoints
+
+### Authentication Routes
+- `GET /auth/discord`: Initiate Discord OAuth flow
+- `GET /auth/discord/callback`: Handle Discord OAuth callback
+- `POST /auth/remember-me`: Set remember-me preference
+- `POST /auth/refresh-token`: Refresh JWT using refresh token
+- `GET /auth/status`: Get current authentication status
+- `GET /auth/logout`: Logout current user
+
+### Bot Management Routes
+- `GET /api/bots`: Get user's bots
+- `POST /api/bots`: Create new bot
+- `GET /api/bots/:id`: Get specific bot details
+- `PUT /api/bots/:id`: Update bot configuration
+- `DELETE /api/bots/:id`: Delete a bot
+- `POST /api/bots/:id/start`: Start a paused bot
+- `POST /api/bots/:id/stop`: Pause a running bot
+- `POST /api/bots/:id/restart`: Restart a bot
+
+### User Routes
+- `GET /api/user/profile`: Get user profile
+- `GET /api/user/subscription`: Get subscription info
+- `GET /api/user/billing-portal`: Get Stripe customer portal URL
+
+### Admin Routes
+- `GET /api/admin/users`: List all users
+- `GET /api/admin/bots`: List all bots
+- `GET /api/admin/stats`: Get platform statistics
+- `POST /api/admin/bots/:id/manage`: Manage any bot
+
+### Webhook Routes
+- `POST /webhooks/stripe`: Handle Stripe events
+
+## Deployment Architecture
+
+### Environment Configuration
+- Development, testing, and production environments
+- Environment-specific configurations
+- Secure handling of sensitive keys and tokens
+- Server address configuration via SERVER_HOST environment variable (e.g., SERVER_HOST=localhost or SERVER_HOST=ipaddress)
+
+### MongoDB Database Requirements
+- **Required Collections**:
+  - `users`: Stores user account information, Discord identities, and subscription status
+  - `bots`: Stores bot configurations, tokens (encrypted), and status information
+  - `stripeEvents`: Records all Stripe webhook events for audit and troubleshooting
+  - `platformStats`: Tracks platform-wide usage metrics and KPIs
+- **Key Indexes**:
+  - `users`: Indexes on discordId, stripeCustomerId
+  - `bots`: Indexes on ownerId, status, updateFrequencySeconds, and botType
+  - `stripeEvents`: Index on stripeEventId and processed status
+- **Schema Requirements**:
+  - Validation rules for each collection to ensure data integrity
+  - Appropriate data types for performance optimization
+  - Timestamp fields for created and updated times
+- **Initial Setup**:
+  - Admin user creation for platform management
+  - Collection and index creation via setup script
+
+### Production Setup
+- Node.js application server
+- MongoDB database (v4.4+)
+- Reverse proxy configuration (Nginx/Apache)
+- HTTPS enforcement
+- Continuous integration/deployment
+- Ubuntu server setup script for MongoDB installation:
+  - Should provide automated MongoDB installation on Ubuntu
+  - Should create required collections and indexes
+  - Should set up authentication for production environment
+  - Should be executable as a bash script (mongodb-setup.sh)
+
+### Environment Variables Configuration
+All environment variables should be configured in a `.env` file at the project root:
+
+```
+# Server Configuration
+NODE_ENV=production
+PORT=5000
+SERVER_HOST=your-domain.com
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://username:password@localhost:27017/cryptobotics
+
+# Discord OAuth Configuration
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+DISCORD_CALLBACK_URL=https://your-domain.com/auth/discord/callback
+
+# Stripe Configuration
+STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_live_your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=whsec_your_stripe_webhook_secret
+
+# Security Configuration
+SESSION_SECRET=your_long_random_session_secret
+ENCRYPTION_KEY=your_encryption_key_for_bot_tokens
+
+# Blockchain RPC Endpoints
+ETH_RPC_URL=https://mainnet.infura.io/v3/your_infura_key
+BSC_RPC_URL=https://bsc-dataseed.binance.org
+POLYGON_RPC_URL=https://polygon-rpc.com
+
+# Webhook Configuration
+WEBHOOK_BASE_PATH=/webhooks
+
+# CORS Configuration
+ALLOWED_ORIGINS=https://your-domain.com,https://admin.your-domain.com
+
+# Admin Configuration
+DEFAULT_ADMIN_DISCORD_ID=your_discord_id
+```
+
+### Essential Environment Variables
+- **SERVER_HOST**: Configures the server hostname/IP used for all external URLs
+  - Used for Discord OAuth callback URLs
+  - Used for Stripe webhook endpoints and success/cancel URLs
+  - Used for frontend API call configurations
+  - Examples: 'localhost', '127.0.0.1', 'myapp.com', '123.45.67.89'
+- **PORT**: Server listening port (default: 5000)
+- **DISCORD_CLIENT_ID**, **DISCORD_CLIENT_SECRET**: Discord API credentials for OAuth
+- **STRIPE_SECRET_KEY**: Your private API key from Stripe Dashboard
+- **STRIPE_WEBHOOK_SECRET**: Secret for verifying incoming webhook events from Stripe
+  - Critical for securing payment events
+  - Created in the Stripe Dashboard when configuring webhooks
+  - Must be kept secure and never exposed publicly
+- **MONGODB_URI**: MongoDB connection string with authentication credentials
+- **SESSION_SECRET**: Long, random string for JWT signing and session encryption
+- **ENCRYPTION_KEY**: Secure key used for encrypting Discord bot tokens in the database
+
+### Scaling Considerations
+- Horizontal scaling for API servers
+- Database scaling strategies
+- Bot service clustering
+- Rate limiting and throttling
+
+## Technical Debt and Future Improvements
+
+1. **Discord Bot Enhancement**
+   - Support for slash commands
+   - Interactive bot configuration
+   - Additional metrics and visualizations
+
+2. **Subscription Enhancements**
+   - Tiered pricing plans
+   - Annual billing options
+   - Team/organization accounts
+
+3. **Platform Features**
+   - Notification system for events
+   - Performance analytics
+   - Custom branding options
+   - API access for integrations
+
+## Conclusion
+
+CryptoBotics provides a comprehensive platform for creating and managing Discord bots that display real-time blockchain metrics. The integration of Discord OAuth for authentication, Stripe for subscription management, and blockchain RPC for data retrieval creates a complete solution for users who want to monitor and share DeFi metrics within Discord communities.

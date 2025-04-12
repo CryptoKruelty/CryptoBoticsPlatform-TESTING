@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-discord-dark text-foreground;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #23272A;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #36393F;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #5865F2;
+  }
+}
+
+@layer utilities {
+  .bg-discord-primary {
+    background-color: #5865F2;
+  }
+  
+  .bg-discord-secondary {
+    background-color: #99AAB5;
+  }
+  
+  .bg-discord-dark {
+    background-color: #23272A;
+  }
+  
+  .bg-discord-light {
+    background-color: #2C2F33;
+  }
+  
+  .bg-discord-lighter {
+    background-color: #36393F;
+  }
+  
+  .bg-crypto-accent {
+    background-color: #00FFFF;
+  }
+  
+  .bg-crypto-success {
+    background-color: #43B581;
+  }
+  
+  .bg-crypto-warning {
+    background-color: #FAA61A;
+  }
+  
+  .bg-crypto-error {
+    background-color: #F04747;
+  }
+  
+  .text-discord-primary {
+    color: #5865F2;
+  }
+  
+  .text-discord-secondary {
+    color: #99AAB5;
+  }
+  
+  .text-crypto-accent {
+    color: #00FFFF;
+  }
+  
+  .text-crypto-success {
+    color: #43B581;
+  }
+  
+  .text-crypto-warning {
+    color: #FAA61A;
+  }
+  
+  .text-crypto-error {
+    color: #F04747;
+  }
+  
+  .border-discord-primary {
+    border-color: #5865F2;
+  }
+  
+  .border-discord-dark {
+    border-color: #23272A;
+  }
+  
+  .border-discord-light {
+    border-color: #2C2F33;
+  }
+  
+  .font-heading {
+    font-family: 'Poppins', sans-serif;
+  }
+}

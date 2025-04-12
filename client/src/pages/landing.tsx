@@ -51,42 +51,168 @@ export default function Landing() {
           </div>
         </section>
         
-        {/* Features Section */}
+        {/* Bot Types Section */}
         <section id="features" className="py-12 md:py-20 px-4 bg-discord-lighter">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-12">
-              Key Features
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-8">
+              Our Discord Bots
             </h2>
+            <p className="text-xl text-discord-secondary text-center max-w-3xl mx-auto mb-12">
+              Choose the perfect bot for your Discord server from our suite of options
+            </p>
             
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-discord-light p-6 rounded-lg">
-                <div className="h-14 w-14 bg-discord-primary bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-                  <span className="material-icons text-discord-primary text-2xl">token</span>
+            {/* 1. Standard Bots */}
+            <div className="mb-16">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-12 w-12 bg-discord-primary bg-opacity-20 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">📊</span>
                 </div>
-                <h3 className="text-xl font-heading font-medium mb-3">Price Tracking</h3>
-                <p className="text-discord-secondary">
-                  Display real-time token prices from any DEX pair. Update as frequently as every 15 seconds.
-                </p>
+                <h3 className="text-2xl font-heading font-bold">Standard Bots</h3>
               </div>
               
-              <div className="bg-discord-light p-6 rounded-lg">
-                <div className="h-14 w-14 bg-discord-primary bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-                  <span className="material-icons text-discord-primary text-2xl">notifications</span>
+              <p className="text-discord-secondary mb-8 max-w-4xl">
+                Track and display real-time DeFi metrics in Discord. Ideal for consistent monitoring with flexible configuration options and customizable update frequencies.
+              </p>
+              
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-discord-light p-5 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">💰</span>
+                    <h4 className="text-lg font-medium">Price Tracker</h4>
+                  </div>
+                  <p className="text-discord-secondary text-sm">
+                    Track real-time token prices from DEXs (Uniswap, PancakeSwap). Bot nickname shows current price.
+                  </p>
                 </div>
-                <h3 className="text-xl font-heading font-medium mb-3">Whale Alerts</h3>
-                <p className="text-discord-secondary">
-                  Get notified when large transactions occur. Set custom thresholds for your community.
-                </p>
+                
+                <div className="bg-discord-light p-5 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">📈</span>
+                    <h4 className="text-lg font-medium">Supply Tracker</h4>
+                  </div>
+                  <p className="text-discord-secondary text-sm">
+                    Monitor circulating or maximum supply of a token. Perfect for tokenomics dashboards or burn metrics.
+                  </p>
+                </div>
+                
+                <div className="bg-discord-light p-5 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">👛</span>
+                    <h4 className="text-lg font-medium">Wallet Balance</h4>
+                  </div>
+                  <p className="text-discord-secondary text-sm">
+                    Track balance of specific wallet addresses. Commonly used for treasury or developer wallet monitoring.
+                  </p>
+                </div>
+                
+                <div className="bg-discord-light p-5 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">🔥</span>
+                    <h4 className="text-lg font-medium">Burn Tracker</h4>
+                  </div>
+                  <p className="text-discord-secondary text-sm">
+                    Track balances of known burn addresses to display total tokens burned. Great for deflationary tokens.
+                  </p>
+                </div>
+                
+                <div className="bg-discord-light p-5 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">💧</span>
+                    <h4 className="text-lg font-medium">Liquidity Pool</h4>
+                  </div>
+                  <p className="text-discord-secondary text-sm">
+                    Track liquidity pool reserves. Ideal for DeFi protocol dashboards or providing liquidity insights.
+                  </p>
+                </div>
+                
+                <div className="bg-discord-light p-5 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">🏦</span>
+                    <h4 className="text-lg font-medium">TVL Tracker</h4>
+                  </div>
+                  <p className="text-discord-secondary text-sm">
+                    Track Total Value Locked across a DeFi protocol or specific smart contracts in real-time.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* 2. Alert Bots */}
+            <div className="mb-16">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-12 w-12 bg-discord-primary bg-opacity-20 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">🚨</span>
+                </div>
+                <h3 className="text-2xl font-heading font-bold">Alert Bots</h3>
               </div>
               
-              <div className="bg-discord-light p-6 rounded-lg">
-                <div className="h-14 w-14 bg-discord-primary bg-opacity-20 rounded-full flex items-center justify-center mb-4">
-                  <span className="material-icons text-discord-primary text-2xl">data_object</span>
+              <p className="text-discord-secondary mb-8 max-w-4xl">
+                Monitor blockchain activity for specific events and send alert messages to designated Discord channels.
+                Set custom thresholds for transaction monitoring.
+              </p>
+              
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div className="bg-discord-light p-5 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">🐋</span>
+                    <h4 className="text-lg font-medium">Whale Alert Bot</h4>
+                  </div>
+                  <p className="text-discord-secondary">
+                    Detect large token transfers above custom thresholds. Get instant notifications when whales are moving tokens,
+                    with configurable alert messages and transaction details.
+                  </p>
                 </div>
-                <h3 className="text-xl font-heading font-medium mb-3">Custom RPC Calls</h3>
-                <p className="text-discord-secondary">
-                  Call any smart contract function and display the results. Full customization for advanced users.
-                </p>
+                
+                <div className="bg-discord-light p-5 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">🔔</span>
+                    <h4 className="text-lg font-medium">Buy Alert Bot</h4>
+                  </div>
+                  <p className="text-discord-secondary">
+                    Get notified when new buys occur. Customize message templates, set minimum transaction value,
+                    and keep your community engaged with activity alerts.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* 3. Custom RPC Bot */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-12 w-12 bg-discord-primary bg-opacity-20 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">⚙️</span>
+                </div>
+                <h3 className="text-2xl font-heading font-bold">Custom RPC Bot</h3>
+              </div>
+              
+              <p className="text-discord-secondary mb-8 max-w-4xl">
+                Execute user-defined smart contract function calls using RPC. For advanced users who need specialized metrics
+                not covered by our standard options.
+              </p>
+              
+              <div className="bg-discord-light p-6 rounded-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">🧩</span>
+                  <h4 className="text-lg font-medium">Advanced Customization</h4>
+                </div>
+                <ul className="space-y-3 text-discord-secondary">
+                  <li className="flex items-start">
+                    <span className="material-icons text-crypto-success mr-2 mt-0.5 text-sm">check_circle</span>
+                    <span>Support for complex data decoding from contract ABIs</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="material-icons text-crypto-success mr-2 mt-0.5 text-sm">check_circle</span>
+                    <span>Flexible output formatting via custom JSON paths</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="material-icons text-crypto-success mr-2 mt-0.5 text-sm">check_circle</span>
+                    <span>Supports any EVM-compatible chain</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="material-icons text-crypto-success mr-2 mt-0.5 text-sm">check_circle</span>
+                    <span>Perfect for developers needing specialized blockchain data</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>

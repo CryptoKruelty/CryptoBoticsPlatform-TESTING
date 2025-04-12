@@ -1,0 +1,95 @@
+Bot Types and Functionality
+1. Standard Bots
+Standard Bots are the most commonly used bots and are focused on tracking and displaying real-time DeFi metrics in Discord. They offer flexible configuration and update frequencies, and are ideal for consistent metric monitoring.
+
+Supported Standard Bot Subtypes:
+
+Price Tracker Bot
+
+Tracks real-time token prices from DEXs (e.g., Uniswap, PancakeSwap)
+
+Updates Discord nickname to reflect current price
+
+Presence: “Watching [Token] Price”
+
+Total Supply Tracker Bot
+
+Monitors total circulating or maximum supply of a given token
+
+Useful for tokenomics dashboards or burn mechanisms
+
+Wallet Balance Bot
+
+Tracks the balance of a specific wallet address
+
+Commonly used for treasury or developer wallet monitoring
+
+Burn Wallet Tracker Bot
+
+Tracks balances of known burn addresses to display total tokens burned
+
+Useful for showcasing deflationary token mechanisms
+
+Uses 🔥 icon for visual branding
+
+Liquidity Pool Tracker Bot
+
+Tracks liquidity pool reserves (e.g., ETH/DAI pair reserve amounts)
+
+Ideal for DeFi protocol dashboards or liquidity alerts
+
+Staking Stats Bot
+
+Tracks staking metrics from smart contracts (e.g., total staked, APY)
+
+Useful for protocol engagement tracking
+
+TVL Tracker Bot
+
+Tracks Total Value Locked across a DeFi protocol or specific contracts
+
+Supports display in USD, native tokens, or both
+
+Shared Features of Standard Bots:
+
+Customizable update intervals: 60s (default), 30s, 15s
+
+Nickname and presence updates for live metric display
+
+Rich configuration panel in dashboard
+
+Display metrics with custom formatting and icons
+
+Optional decimal precision and suffixes
+
+2. Alert Bots (Whale/Buy)
+Monitors blockchain activity for specific events (e.g., large transactions)
+
+Sends alert messages to designated Discord channels
+
+Can detect buys, sells, token transfers over a threshold
+
+Supports custom message templates and emojis
+
+Presence: “Monitoring Transactions”
+
+Subtypes:
+
+Whale Alert Bot
+
+Buy Alert Bot
+
+(Custom thresholds and tracking logic)
+
+3. Custom RPC Bot
+Executes user-defined smart contract function calls using RPC
+
+Supports complex data decoding from contract ABIs
+
+Flexible output formatting via custom JSON paths
+
+Ideal for advanced users or developers needing specialized metrics
+
+Supports any EVM-compatible chain
+
+Presence: “Custom Data Monitor”

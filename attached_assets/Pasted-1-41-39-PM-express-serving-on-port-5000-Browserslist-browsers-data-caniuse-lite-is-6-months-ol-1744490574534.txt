@@ -1,0 +1,24 @@
+1:41:39 PM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Auth callback error: TypeError: Invalid URL
+    at new URL (node:internal/url:797:36)
+    at Object.parse (file:///C:/Users/CK/Downloads/CryptoBoticsPlatform%20(2)/CryptoBoticsPlatform/node_modules/@neondatabase/serverless/index.mjs:841:225)
+    at parse (file:///C:/Users/CK/Downloads/CryptoBoticsPlatform%20(2)/CryptoBoticsPlatform/node_modules/@neondatabase/serverless/index.mjs:848:1)
+    at new ConnectionParameters (file:///C:/Users/CK/Downloads/CryptoBoticsPlatform%20(2)/CryptoBoticsPlatform/node_modules/@neondatabase/serverless/index.mjs:869:23)
+    at new Client (file:///C:/Users/CK/Downloads/CryptoBoticsPlatform%20(2)/CryptoBoticsPlatform/node_modules/@neondatabase/serverless/index.mjs:1226:35)
+    at new NeonClient (file:///C:/Users/CK/Downloads/CryptoBoticsPlatform%20(2)/CryptoBoticsPlatform/node_modules/@neondatabase/serverless/index.mjs:1570:121)
+    at Cn.newClient (file:///C:/Users/CK/Downloads/CryptoBoticsPlatform%20(2)/CryptoBoticsPlatform/node_modules/@neondatabase/serverless/index.mjs:1378:74)
+    at Cn.connect (file:///C:/Users/CK/Downloads/CryptoBoticsPlatform%20(2)/CryptoBoticsPlatform/node_modules/@neondatabase/serverless/index.mjs:1378:23)
+    at Cn.query (file:///C:/Users/CK/Downloads/CryptoBoticsPlatform%20(2)/CryptoBoticsPlatform/node_modules/@neondatabase/serverless/index.mjs:1407:63)
+    at Cn.query (file:///C:/Users/CK/Downloads/CryptoBoticsPlatform%20(2)/CryptoBoticsPlatform/node_modules/@neondatabase/serverless/index.mjs:1623:14)
+    at NeonPreparedQuery.execute (C:\Users\CK\Downloads\CryptoBoticsPlatform (2)\CryptoBoticsPlatform\node_modules\src\neon-serverless\session.ts:102:31)
+    at <anonymous> (C:\Users\CK\Downloads\CryptoBoticsPlatform (2)\CryptoBoticsPlatform\node_modules\src\pg-core\query-builders\select.ts:1009:27)
+    at Object.startActiveSpan (C:\Users\CK\Downloads\CryptoBoticsPlatform (2)\CryptoBoticsPlatform\node_modules\src\tracing.ts:27:11)
+    at PgSelectBase.execute (C:\Users\CK\Downloads\CryptoBoticsPlatform (2)\CryptoBoticsPlatform\node_modules\src\pg-core\query-builders\select.ts:1008:17)
+    at PgSelectBase.then (C:\Users\CK\Downloads\CryptoBoticsPlatform (2)\CryptoBoticsPlatform\node_modules\src\query-promise.ts:31:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ERR_INVALID_URL',
+  input: 'postgresql://botics:Ariabay11215432/cryptobotics'
+}

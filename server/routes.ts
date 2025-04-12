@@ -33,41 +33,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup Discord OAuth routes
   app.get("/auth/discord", (req, res) => {
-    const state = req.query.state as string;
-    if (!state) {
-      return res.status(400).json({ message: "Missing state parameter" });
-    }
-    req.session.oauthState = state;
-    
-    // In development, always use localhost:5000
-    const redirectUri = process.env.NODE_ENV === 'production'
-      ? `https://${process.env.SERVER_HOST || 'localhost'}/auth/discord/callback`
-      : 'http://localhost:5000/auth/discord/callback';
+    try {
+      // Generate a secure random state if none was provided
+      const state = req.query.state as string || crypto.randomUUID();
       
-    const authUrl = discordAuthService.getAuthorizationUrl(redirectUri, state);
-    res.redirect(authUrl);
+      // Store state in session for validation
+      if (!req.session) {
+        return res.status(500).json({ message: "Session initialization failed" });
+      }
+      
+      // Store the state in session
+      req.session.oauthState = state;
+      
+      // Build redirect URI based on environment
+      const host = process.env.SERVER_HOST || req.get('host') || 'localhost:5000';
+      const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+      const redirectUri = `${protocol}://${host}/auth/discord/callback`;
+      
+      // Use consent prompt to ensure fresh authentication
+      const authUrl = discordAuthService.getAuthorizationUrl(redirectUri, state, 'consent');
+      console.log(`Redirecting to Discord auth: ${authUrl}`);
+      res.redirect(authUrl);
+    } catch (error) {
+      console.error("Discord auth initiation error:", error);
+      res.status(500).json({ 
+        message: "Failed to initiate Discord authentication",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
   });
 
   app.get("/auth/discord/callback", async (req, res) => {
     try {
+      // Extract code and state from query parameters
       const { code, state } = req.query as { code: string, state: string };
       
-      // Validate state parameter
+      if (!code) {
+        return res.status(400).json({ message: "Missing authorization code" });
+      }
+      
+      if (!state) {
+        return res.status(400).json({ message: "Missing state parameter" });
+      }
+      
+      // Validate state parameter to prevent CSRF attacks
       if (!req.session.oauthState || req.session.oauthState !== state) {
+        console.error("State validation failed", {
+          sessionState: req.session.oauthState,
+          receivedState: state
+        });
         return res.status(400).json({ message: "Invalid state parameter" });
       }
       
-      // In development, always use localhost:5000
-      const redirectUri = process.env.NODE_ENV === 'production'
-        ? `https://${process.env.SERVER_HOST || 'localhost'}/auth/discord/callback`
-        : 'http://localhost:5000/auth/discord/callback';
+      // Clear the state from session
+      req.session.oauthState = null;
       
+      // Build redirect URI - must match the one used in the original request
+      const host = process.env.SERVER_HOST || req.get('host') || 'localhost:5000';
+      const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+      const redirectUri = `${protocol}://${host}/auth/discord/callback`;
+      
+      // Exchange code for access token
+      console.log(`Exchanging code for token with redirect URI: ${redirectUri}`);
       const tokenData = await discordAuthService.exchangeCode(code, redirectUri);
-      const userData = await discordAuthService.getUserInfo(tokenData.access_token);
       
-      // Find or create user
+      // Get user info from Discord
+      const userData = await discordAuthService.getUserInfo(tokenData.access_token);
+      console.log(`Authenticated Discord user: ${userData.username} (${userData.id})`);
+      
+      // Find or create user in our database
       let user = await storage.getUserByDiscordId(userData.id);
       if (user) {
+        // Update existing user with new token and profile information
         user = await storage.updateUser(user.id, {
           username: userData.username,
           avatar: userData.avatar,
@@ -76,7 +113,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tokenExpires: new Date(Date.now() + tokenData.expires_in * 1000),
           email: userData.email
         });
+        console.log(`Updated existing user ${user.id}`);
       } else {
+        // Create new user
         user = await storage.createUser({
           discordId: userData.id,
           username: userData.username,
@@ -88,47 +127,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAdmin: false,
           subscriptionStatus: 'inactive'
         });
+        console.log(`Created new user ${user.id}`);
       }
       
-      // Set user in session
+      // Set user ID in session for authentication
       req.session.userId = user.id;
       
       // Redirect to dashboard
       res.redirect("/dashboard");
     } catch (error) {
       console.error("Auth callback error:", error);
-      res.status(500).json({ message: "Authentication failed" });
+      res.status(500).json({ 
+        message: "Authentication failed", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
   app.get("/auth/status", async (req, res) => {
-    if (req.session.userId) {
-      const user = await storage.getUser(req.session.userId);
-      if (user) {
-        return res.json({
-          authenticated: true,
-          user: {
-            id: user.id,
-            discordId: user.discordId,
-            username: user.username,
-            avatar: user.avatar,
-            isAdmin: user.isAdmin,
-            subscriptionStatus: user.subscriptionStatus
-          }
-        });
+    try {
+      const userId = req.session.userId;
+      
+      if (!userId) {
+        return res.json({ authenticated: false });
       }
+      
+      // Get current user data
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        // User ID in session but no matching user in database
+        req.session.userId = null;
+        return res.json({ authenticated: false });
+      }
+      
+      // Return sanitized user object (no sensitive data)
+      res.json({
+        authenticated: true,
+        user: {
+          id: user.id,
+          discordId: user.discordId,
+          username: user.username,
+          avatar: user.avatar,
+          isAdmin: user.isAdmin,
+          subscriptionStatus: user.subscriptionStatus
+        }
+      });
+    } catch (error) {
+      console.error("Auth status error:", error);
+      res.status(500).json({ 
+        message: "Failed to get authentication status",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
-    
-    res.json({ authenticated: false });
   });
-
-  app.get("/auth/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Session destruction error:", err);
+  
+  app.get("/auth/logout", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      
+      // Revoke Discord tokens if available
+      if (userId) {
+        await discordAuthService.signOutUser(userId);
       }
+      
+      // Clear session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Session destruction error:", err);
+        }
+        
+        // In all cases, redirect to home page
+        res.redirect("/");
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
       res.redirect("/");
-    });
+    }
   });
 
   // User routes

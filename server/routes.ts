@@ -39,9 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     req.session.oauthState = state;
     
-    const redirectUri = process.env.SERVER_HOST
-      ? `${process.env.SERVER_HOST}/auth/discord/callback`
-      : `http://localhost:5000/auth/discord/callback`;
+    const redirectUri = `http://localhost/auth/discord/callback`;
       
     const authUrl = discordAuthService.getAuthorizationUrl(redirectUri, state);
     res.redirect(authUrl);
@@ -56,9 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid state parameter" });
       }
       
-      const redirectUri = process.env.SERVER_HOST
-        ? `${process.env.SERVER_HOST}/auth/discord/callback`
-        : `http://localhost:5000/auth/discord/callback`;
+      const redirectUri = `http://localhost/auth/discord/callback`;
       
       const tokenData = await discordAuthService.exchangeCode(code, redirectUri);
       const userData = await discordAuthService.getUserInfo(tokenData.access_token);
@@ -173,9 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const returnUrl = process.env.SERVER_HOST 
-        ? `${process.env.SERVER_HOST}/dashboard` 
-        : 'http://localhost:5000/dashboard';
+      const returnUrl = 'http://localhost/dashboard';
       
       const portalSession = await stripeService.createBillingPortalSession(
         user.stripeCustomerId,

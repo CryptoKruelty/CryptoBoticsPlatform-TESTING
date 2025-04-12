@@ -29,9 +29,14 @@ class DiscordAuthService {
   }
   
   getAuthorizationUrl(redirectUri: string, state: string): string {
+    // Ensure redirect URI has protocol
+    const fullRedirectUri = redirectUri.startsWith('http') 
+      ? redirectUri 
+      : `http://${redirectUri}`;
+
     const params = new URLSearchParams({
       client_id: this.clientId,
-      redirect_uri: redirectUri,
+      redirect_uri: fullRedirectUri,
       response_type: "code",
       scope: "identify email guilds",
       state

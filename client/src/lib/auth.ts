@@ -15,7 +15,11 @@ export interface AuthStatus {
 }
 
 export const loginWithDiscord = () => {
-  window.location.href = '/auth/discord';
+  // Use the full URL with protocol when in production
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? window.location.origin
+    : 'http://localhost:5000';
+  window.location.href = `${baseUrl}/auth/discord`;
 };
 
 export const logout = async () => {

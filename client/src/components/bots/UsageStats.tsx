@@ -13,12 +13,17 @@ export default function UsageStats() {
     queryKey: ['/api/user/subscription'],
   });
   
+  // Get platform stats
+  const { data: platformStats } = useQuery({
+    queryKey: ['/api/platform/stats'],
+  });
+  
   // Calculate stats
   const activeBots = bots ? bots.filter((bot: any) => bot.status === 'active').length : 0;
   const totalBots = bots ? bots.length : 0;
   
-  // Get RPC calls from subscription if available
-  const rpcCalls = 3420; // Placeholder value for demo
+  // Get RPC calls from platform stats
+  const rpcCalls = platformStats?.dailyRpcCalls || 0;
   
   // Count unique Discord servers
   const discordServers = bots 

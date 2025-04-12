@@ -266,7 +266,7 @@ export default function CreateBotModal({ onClose, editBotId }: CreateBotModalPro
                     <span className="font-medium">Alert Bot</span>
                   </div>
                   <p className="text-xs text-discord-secondary">Send whale transaction alerts to channels</p>
-                  <p className={`text-xs ${botType === 'alert_whale' ? 'text-crypto-accent' : 'text-discord-secondary'} mt-2`}>$9.00/month</p>
+                  <p className={`text-xs ${botType === 'alert_whale' ? 'text-crypto-accent' : 'text-discord-secondary'} mt-2`}>$8.00/month</p>
                 </div>
                 
                 <div 
@@ -278,7 +278,7 @@ export default function CreateBotModal({ onClose, editBotId }: CreateBotModalPro
                     <span className="font-medium">Custom RPC</span>
                   </div>
                   <p className="text-xs text-discord-secondary">Execute custom smart contract calls</p>
-                  <p className={`text-xs ${botType === 'custom_rpc' ? 'text-crypto-accent' : 'text-discord-secondary'} mt-2`}>$5.00/month</p>
+                  <p className={`text-xs ${botType === 'custom_rpc' ? 'text-crypto-accent' : 'text-discord-secondary'} mt-2`}>$11.00/month</p>
                 </div>
               </div>
             </div>
@@ -484,7 +484,7 @@ export default function CreateBotModal({ onClose, editBotId }: CreateBotModalPro
               <div className="bg-discord-light rounded-lg p-3">
                 <div className="flex justify-between py-1">
                   <span>{botType === 'standard' ? 'Standard Bot' : botType === 'alert_whale' || botType === 'alert_buy' ? 'Alert Bot' : 'Custom RPC Bot'}</span>
-                  <span>{formatCurrency(botType === 'alert_whale' || botType === 'alert_buy' ? 9.00 : 5.00)}/month</span>
+                  <span>{formatCurrency(botType === 'standard' ? 5.00 : botType === 'alert_whale' || botType === 'alert_buy' ? 8.00 : 11.00)}/month</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-discord-dark">
                   <span>Update frequency ({updateFrequency}s)</span>

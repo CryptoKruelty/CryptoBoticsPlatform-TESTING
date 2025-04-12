@@ -158,7 +158,7 @@ export default function Subscribe() {
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto py-8">
-        <h1 className="text-2xl font-heading font-bold mb-6">Subscribe to CryptoBotics Pro</h1>
+        <h1 className="text-2xl font-heading font-bold mb-6">Subscribe to CryptoBotics</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="col-span-2">
@@ -173,29 +173,45 @@ export default function Subscribe() {
           
           <div className="col-span-1">
             <div className="bg-discord-lighter rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-heading font-medium mb-4">Subscription Summary</h2>
+              <h2 className="text-xl font-heading font-medium mb-4">Pricing Information</h2>
               
               <div className="space-y-3 mb-4">
-                <div className="flex justify-between">
-                  <span>CryptoBotics Pro</span>
-                  <span>$9.99/month</span>
+                <h3 className="font-medium">Bot Base Pricing:</h3>
+                <div className="flex justify-between text-sm">
+                  <span>Standard Bot</span>
+                  <span>$5.00/month</span>
                 </div>
-                <div className="pt-2 border-t border-discord-dark flex justify-between font-medium">
-                  <span>Total</span>
-                  <span>$9.99/month</span>
+                <div className="flex justify-between text-sm">
+                  <span>Alert Bot</span>
+                  <span>$8.00/month</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Custom RPC Bot</span>
+                  <span>$11.00/month</span>
+                </div>
+                <div className="pt-2 border-t border-discord-dark">
+                  <h3 className="font-medium mt-2">Update Frequency Add-ons:</h3>
+                  <div className="flex justify-between text-sm">
+                    <span>30-Second Updates</span>
+                    <span>+$2.00/month</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>15-Second Updates</span>
+                    <span>+$5.00/month</span>
+                  </div>
                 </div>
               </div>
               
               <div className="bg-discord-light rounded-md p-3 text-sm">
-                <h3 className="font-medium mb-2">Pro Plan Includes:</h3>
+                <h3 className="font-medium mb-2">Subscription Benefits:</h3>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <span className="material-icons text-crypto-success mr-2 text-sm">check_circle</span>
-                    <span>Up to 5 bots</span>
+                    <span>Pay only for what you use</span>
                   </li>
                   <li className="flex items-start">
                     <span className="material-icons text-crypto-success mr-2 text-sm">check_circle</span>
-                    <span>All bot types</span>
+                    <span>All blockchain networks supported</span>
                   </li>
                   <li className="flex items-start">
                     <span className="material-icons text-crypto-success mr-2 text-sm">check_circle</span>
@@ -203,7 +219,7 @@ export default function Subscribe() {
                   </li>
                   <li className="flex items-start">
                     <span className="material-icons text-crypto-success mr-2 text-sm">check_circle</span>
-                    <span>Cancel anytime</span>
+                    <span>Cancel or modify anytime</span>
                   </li>
                 </ul>
               </div>

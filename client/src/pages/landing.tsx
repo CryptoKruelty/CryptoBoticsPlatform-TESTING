@@ -188,7 +188,7 @@ export default function Landing() {
                   Most Popular
                 </div>
                 <h3 className="text-xl font-heading font-medium mb-2">Alert Bot</h3>
-                <p className="text-3xl font-bold mb-4">$9<span className="text-sm text-discord-secondary">/mo</span></p>
+                <p className="text-3xl font-bold mb-4">$8<span className="text-sm text-discord-secondary">/mo</span></p>
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center">
                     <span className="material-icons text-crypto-success mr-2">check_circle</span>
@@ -217,7 +217,7 @@ export default function Landing() {
               
               <div className="bg-discord-light p-6 rounded-lg">
                 <h3 className="text-xl font-heading font-medium mb-2">Custom RPC Bot</h3>
-                <p className="text-3xl font-bold mb-4">$5<span className="text-sm text-discord-secondary">/mo</span></p>
+                <p className="text-3xl font-bold mb-4">$11<span className="text-sm text-discord-secondary">/mo</span></p>
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center">
                     <span className="material-icons text-crypto-success mr-2">check_circle</span>

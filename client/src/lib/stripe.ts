@@ -32,12 +32,14 @@ export const getBotPrice = (botType: string, updateFrequency: string): number =>
   
   switch (botType) {
     case 'standard':
-    case 'custom_rpc':
       price = 5.00;
       break;
     case 'alert_whale':
     case 'alert_buy':
-      price = 9.00;
+      price = 8.00;
+      break;
+    case 'custom_rpc':
+      price = 11.00;
       break;
     default:
       price = 5.00;

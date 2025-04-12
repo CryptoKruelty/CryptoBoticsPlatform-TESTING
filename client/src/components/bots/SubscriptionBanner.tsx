@@ -76,6 +76,11 @@ export default function SubscriptionBanner() {
           <p className="text-discord-secondary">
             You have {activeBots} active {activeBots === 1 ? 'bot' : 'bots'} ({totalBots} total)
           </p>
+          {totalMonthlyCost > 0 && (
+            <p className="text-crypto-accent">
+              Total monthly cost: {formatCurrency(totalMonthlyCost)}
+            </p>
+          )}
         </div>
         <div className="mt-3 md:mt-0 flex flex-col md:flex-row md:space-x-3 space-y-2 md:space-y-0">
           <button 

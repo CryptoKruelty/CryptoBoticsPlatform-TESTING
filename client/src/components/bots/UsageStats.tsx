@@ -46,7 +46,7 @@ export default function UsageStats() {
         <div className="bg-discord-light p-3 rounded-md">
           <p className="text-sm text-discord-secondary">Active Bots</p>
           <p className="text-2xl font-medium text-white">
-            {activeBots} <span className="text-sm text-discord-secondary">/ 5</span>
+            {activeBots} <span className="text-sm text-discord-secondary">/ {totalBots}</span>
           </p>
         </div>
         

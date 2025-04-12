@@ -39,10 +39,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     req.session.oauthState = state;
     
-    // Use SERVER_HOST and include port 5000 (development server port)
-    const host = process.env.SERVER_HOST || 'localhost';
-    const port = process.env.NODE_ENV === 'production' ? '' : ':5000';
-    const redirectUri = `http://${host}${port}/auth/discord/callback`;
+    // In development, always use localhost:5000
+    const redirectUri = process.env.NODE_ENV === 'production'
+      ? `https://${process.env.SERVER_HOST || 'localhost'}/auth/discord/callback`
+      : 'http://localhost:5000/auth/discord/callback';
       
     const authUrl = discordAuthService.getAuthorizationUrl(redirectUri, state);
     res.redirect(authUrl);
@@ -57,10 +57,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid state parameter" });
       }
       
-      // Use SERVER_HOST and include port 5000 (development server port)
-      const host = process.env.SERVER_HOST || 'localhost';
-      const port = process.env.NODE_ENV === 'production' ? '' : ':5000';
-      const redirectUri = `http://${host}${port}/auth/discord/callback`;
+      // In development, always use localhost:5000
+      const redirectUri = process.env.NODE_ENV === 'production'
+        ? `https://${process.env.SERVER_HOST || 'localhost'}/auth/discord/callback`
+        : 'http://localhost:5000/auth/discord/callback';
       
       const tokenData = await discordAuthService.exchangeCode(code, redirectUri);
       const userData = await discordAuthService.getUserInfo(tokenData.access_token);

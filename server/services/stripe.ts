@@ -9,7 +9,14 @@ class StripeService {
   
   constructor() {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-    this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+    
+    // Check for webhook secret
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      console.warn("WARNING: STRIPE_WEBHOOK_SECRET is not set in environment variables. Webhook functionality will be limited.");
+      this.webhookSecret = '';
+    } else {
+      this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    }
     
     if (stripeSecretKey) {
       this.stripe = new Stripe(stripeSecretKey, {

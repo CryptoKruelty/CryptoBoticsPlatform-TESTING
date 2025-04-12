@@ -10,7 +10,14 @@ class BotService {
   
   constructor() {
     this.activeBots = new Map();
-    this.encryptionKey = process.env.ENCRYPTION_KEY || "cryptobotics-key";
+    
+    // Ensure encryption key is provided in environment variables
+    if (!process.env.ENCRYPTION_KEY) {
+      console.warn("WARNING: ENCRYPTION_KEY is not set in environment variables. Using a default key which is insecure.");
+      this.encryptionKey = "cryptobotics-development-key-do-not-use-in-production";
+    } else {
+      this.encryptionKey = process.env.ENCRYPTION_KEY;
+    }
     
     // Register cleanup on process exit
     process.on('SIGINT', this.cleanup.bind(this));

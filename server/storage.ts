@@ -26,6 +26,7 @@ export interface IStorage {
   // Stripe operations
   createStripeEvent(event: InsertStripeEvent): Promise<StripeEvent>;
   getUnprocessedStripeEvents(): Promise<StripeEvent[]>;
+  getStripeEventByStripeId(stripeEventId: string): Promise<StripeEvent[] | null>;
   markStripeEventProcessed(id: number): Promise<boolean>;
   
   // Platform stats operations
@@ -191,6 +192,20 @@ export class DatabaseStorage implements IStorage {
 
   async getUnprocessedStripeEvents(): Promise<StripeEvent[]> {
     return db.select().from(stripeEvents).where(eq(stripeEvents.processed, false));
+  }
+  
+  async getStripeEventByStripeId(stripeEventId: string): Promise<StripeEvent[] | null> {
+    try {
+      const events = await db
+        .select()
+        .from(stripeEvents)
+        .where(eq(stripeEvents.stripeEventId, stripeEventId));
+      
+      return events;
+    } catch (error) {
+      console.error(`Error fetching stripe event by ID ${stripeEventId}:`, error);
+      return null;
+    }
   }
 
   async markStripeEventProcessed(id: number): Promise<boolean> {

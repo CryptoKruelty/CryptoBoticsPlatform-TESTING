@@ -523,18 +523,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/webhooks/stripe", async (req, res) => {
     const sig = req.headers['stripe-signature'] as string;
     
+    if (!sig) {
+      console.error("Missing Stripe signature");
+      return res.status(400).json({ message: "Missing Stripe signature" });
+    }
+    
+    // Check if webhook secret is configured
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      console.error("Stripe webhook secret not configured");
+      return res.status(500).json({ message: "Webhook not configured" });
+    }
+    
     try {
+      // For parsing the raw body, express.raw middleware should be used for this route in production
       const event = stripeService.constructWebhookEvent(req.body, sig);
       
-      // Store event in database
+      console.log(`Processing Stripe webhook: ${event.type}`);
+      
+      // Store event in database for audit and retry purposes
       await storage.createStripeEvent({
         stripeEventId: event.id,
         type: event.type,
-        data: event.data.object
+        data: event.data.object,
+        processed: false
       });
       
       // Process the event
       await stripeService.handleWebhookEvent(event);
+      
+      // Mark as processed
+      const events = await storage.getStripeEventByStripeId(event.id);
+      if (events && events.length > 0) {
+        await storage.markStripeEventProcessed(events[0].id);
+      }
       
       res.json({ received: true });
     } catch (error) {

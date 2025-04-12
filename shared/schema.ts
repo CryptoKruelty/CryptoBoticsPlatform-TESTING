@@ -82,7 +82,6 @@ export const insertBotSchema = createInsertSchema(bots).omit({
 
 export const insertStripeEventSchema = createInsertSchema(stripeEvents).omit({
   id: true,
-  processed: true,
   createdAt: true
 });
 

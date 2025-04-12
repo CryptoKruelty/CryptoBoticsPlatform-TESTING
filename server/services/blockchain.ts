@@ -66,6 +66,38 @@ class BlockchainService {
       acc[network] = 0;
       return acc;
     }, {} as Record<string, number>);
+    
+    // Schedule daily RPC call counter reset
+    this.scheduleDailyRpcReset();
+  }
+  
+  /**
+   * Schedules a daily reset of the RPC call counter at midnight
+   */
+  private scheduleDailyRpcReset() {
+    const resetDaily = async () => {
+      try {
+        await storage.updatePlatformStats({
+          dailyRpcCalls: 0
+        });
+        console.log("Daily RPC call counter reset successfully");
+      } catch (error) {
+        console.error("Failed to reset daily RPC call counter:", error);
+      }
+      
+      // Schedule next reset
+      this.scheduleDailyRpcReset();
+    };
+    
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+    setTimeout(resetDaily, timeUntilMidnight);
+    
+    console.log(`Scheduled RPC counter reset in ${Math.round(timeUntilMidnight / 3600000)} hours`);
   }
   
   private async makeRpcCall(network: string, method: string, params: any[]): Promise<any> {
